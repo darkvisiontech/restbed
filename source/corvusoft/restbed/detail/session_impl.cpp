@@ -73,6 +73,8 @@ namespace restbed
             m_context( ),
             m_error_handler( nullptr ),
             m_keep_alive_callback( nullptr ),
+            m_start_time(std::chrono::steady_clock::now()),
+            m_bytes_sent(0),
             m_error_handler_invoked( false )
         {
             return;

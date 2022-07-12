@@ -1,0 +1,25 @@
+cmake_minimum_required(VERSION 3.18)
+if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
+    if (DEFINED ENV{XILINX_2020.1_SDK}) 
+        cmake_path(CONVERT $ENV{XILINX_2020.1_SDK} TO_CMAKE_PATH_LIST XILINX_SDK_PATH)
+
+        set(CMAKE_SYSTEM_NAME Linux)
+        set(CMAKE_SYSTEM_PROCESSOR arm)
+        set(CMAKE_SYSROOT "${XILINX_SDK_PATH}/gnu/aarch64/nt/aarch64-linux/aarch64-xilinx-linux")
+        set(CMAKE_C_COMPILER "${XILINX_SDK_PATH}/gnu/aarch64/nt/aarch64-linux/bin/aarch64-linux-gnu-gcc.exe")
+        set(CMAKE_CXX_COMPILER "${XILINX_SDK_PATH}/gnu/aarch64/nt/aarch64-linux/bin/aarch64-linux-gnu-g++.exe")
+        set(CMAKE_STRIP "${XILINX_SDK_PATH}/gnu/aarch64/nt/aarch64-linux/bin/aarch64-linux-gnu-strip.exe")
+
+    else()
+        message(FATAL_ERROR "XILINX_2020.1_SDK environment variable not defined...")
+    endif()
+else()
+
+    set(CMAKE_SYSTEM_NAME Linux)
+    set(CMAKE_SYSTEM_PROCESSOR arm)
+    set(CMAKE_SYSROOT "/opt/petalinux/2020.1/sysroots/aarch64-xilinx-linux")
+    set(CMAKE_C_COMPILER "aarch64-xilinx-linux-gcc")
+    set(CMAKE_CXX_COMPILER "aarch64-xilinx-linux-g++")
+    set(CMAKE_STRIP "aarch64-xilinx-linux-strip")
+
+endif()

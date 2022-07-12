@@ -88,7 +88,7 @@ namespace restbed
 
                 std::chrono::steady_clock::time_point m_start_time;
 
-                size_t m_bytes_sent = 0;
+                size_t m_bytes_sent;
                 
             protected:
                 //Friends
