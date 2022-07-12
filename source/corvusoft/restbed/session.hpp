@@ -75,21 +75,21 @@ namespace restbed
             
             bool is_closed( void ) const;
             
-            void close( const Bytes& body );
+            void close( const Bytes& body, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
-            void close( const Response& response );
+            void close( const Response& response, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
-            void close( const std::string& body = "" );
+            void close( const std::string& body = "", const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
-            void close( const int status, const Bytes& body );
+            void close( const int status, const Bytes& body, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
-            void close( const int status, const std::string& body = "" );
+            void close( const int status, const std::string& body = "", const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
-            void close( const int status, const std::multimap< std::string, std::string >& headers );
+            void close( const int status, const std::multimap< std::string, std::string >& headers, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
-            void close( const int status, const std::string& body, const std::multimap< std::string, std::string >& headers );
+            void close( const int status, const std::string& body, const std::multimap< std::string, std::string >& headers, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
-            void close( const int status, const Bytes& body, const std::multimap< std::string, std::string >& headers );
+            void close( const int status, const Bytes& body, const std::multimap< std::string, std::string >& headers, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
             void yield( const Bytes& data, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
@@ -131,7 +131,7 @@ namespace restbed
             const std::string get_origin( void ) const;
             
             const std::string get_destination( void ) const;
-            
+
             const std::shared_ptr< const Request > get_request(  void ) const;
             
             const std::shared_ptr< const Resource > get_resource( void ) const;
@@ -141,7 +141,11 @@ namespace restbed
             const ContextValue& get( const std::string& name ) const;
             
             const ContextValue& get( const std::string& name, const ContextValue& default_value ) const;
-            
+
+            std::chrono::milliseconds get_duration( void ) const;
+
+            size_t get_bytes_sent( void ) const;
+
             //Setters
             void set_id( const std::string& value );
             

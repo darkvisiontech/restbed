@@ -530,12 +530,7 @@ namespace restbed
         }
         
         void ServiceImpl::router( const shared_ptr< Session > session ) const
-        {
-            log( Logger::INFO, String::format( "Incoming '%s' request from '%s' for route '%s'.",
-                                               session->get_request( )->get_method( ).data( ),
-                                               session->get_origin( ).data( ),
-                                               session->get_request( )->get_path( ).data( ) ) );
-                                               
+        {                                              
             if ( session->is_closed( ) )
             {
                 return;
@@ -618,6 +613,7 @@ namespace restbed
                     session->m_pimpl->m_request->m_pimpl->m_buffer = make_shared< asio::streambuf >( );
                     session->m_pimpl->m_keep_alive_callback = bind( &ServiceImpl::parse_request, this, _1, _2, _3 );
                     session->m_pimpl->m_request->m_pimpl->m_socket->start_read( session->m_pimpl->m_request->m_pimpl->m_buffer, "\r\n\r\n", bind( &ServiceImpl::parse_request, this, _1, _2, session ) );
+                    session->m_pimpl->m_bytes_sent = 0;
                 } );
             }
             else
@@ -829,6 +825,8 @@ namespace restbed
                 session->m_pimpl->m_request->m_pimpl->m_method = items.at( "method" );
                 session->m_pimpl->m_request->m_pimpl->m_headers = parse_request_headers( stream );
                 session->m_pimpl->m_request->m_pimpl->m_query_parameters = uri.get_query_parameters( );
+                session->m_pimpl->m_start_time = std::chrono::steady_clock::now();
+                session->m_pimpl->m_bytes_sent = 0;
                 
                 char* locale = strdup( setlocale( LC_NUMERIC, nullptr ) );
                 setlocale( LC_NUMERIC, "C" );

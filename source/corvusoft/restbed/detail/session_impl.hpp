@@ -85,6 +85,10 @@ namespace restbed
                 std::function< void ( const int, const std::exception&, const std::shared_ptr< Session > ) > m_error_handler;
                 
                 std::function< void (  const std::error_code& error, std::size_t length, const std::shared_ptr< Session > ) > m_keep_alive_callback;
+
+                std::chrono::steady_clock::time_point m_start_time;
+
+                size_t m_bytes_sent = 0;
                 
             protected:
                 //Friends
