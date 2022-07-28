@@ -70,7 +70,7 @@ namespace restbed
                 
                 virtual void sleep_for( const std::chrono::milliseconds& delay, const std::function< void ( const std::error_code& ) >& callback );
                 
-				virtual void start_write(const Bytes& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback);
+				virtual void start_write(Bytes&& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback);
 				
 				virtual size_t start_read( const std::shared_ptr< asio::streambuf >& data, const std::string& delimiter, std::error_code& error );
 				

@@ -44,7 +44,6 @@ using std::free;
 using std::bind;
 using std::stod;
 using std::regex;
-using std::smatch;
 using std::string;
 using std::istream;
 using std::function;
@@ -263,10 +262,10 @@ namespace restbed
             string status_line = String::empty;
             getline( response_stream, status_line );
             
-            smatch matches;
-            static const regex status_line_pattern( "^([a-zA-Z]+)\\/(\\d*\\.?\\d*) (-?\\d+) (.*)\\r$" );
+            std::cmatch matches;
+            static const regex status_line_pattern( "^([a-zA-Z]+)\\/(\\d*\\.?\\d*) (-?\\d+) (.*)\\r$", std::regex_constants::optimize );
             
-            if ( not regex_match( status_line, matches, status_line_pattern ) or matches.size( ) not_eq 5 )
+            if ( not regex_match( status_line.c_str(), matches, status_line_pattern ) or matches.size( ) not_eq 5 )
             {
                 const auto body = String::format( "HTTP response status line malformed: '%s'", status_line.data( ) );
                 return callback( request, create_error_response( request, body ) );
@@ -300,10 +299,10 @@ namespace restbed
             
             while ( getline( response_stream, header ) and header not_eq "\r" )
             {
-                static const regex header_pattern( "^([^:.]*): *(.*)\\s*$" );
-                smatch matches;
+                static const regex header_pattern( "^([^:.]*): *(.*)\\s*$", std::regex_constants::optimize );
+                std::cmatch matches;
                 
-                if ( not regex_match( header, matches, header_pattern ) or matches.size( ) not_eq 3 )
+                if ( not regex_match( header.c_str(), matches, header_pattern ) or matches.size( ) not_eq 3 )
                 {
                     const auto body = String::format( "Malformed HTTP response header: '%s'", header.data( ) );
                     return callback( request, create_error_response( request, body ) );

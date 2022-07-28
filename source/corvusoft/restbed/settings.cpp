@@ -128,7 +128,7 @@ namespace restbed
         return m_pimpl->m_ssl_settings;
     }
     
-    multimap< string, string > Settings::get_default_headers( void ) const
+    const multimap< string, string >& Settings::get_default_headers( void ) const
     {
         return m_pimpl->m_default_headers;
     }

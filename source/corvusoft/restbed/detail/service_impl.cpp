@@ -45,7 +45,6 @@ using std::pair;
 using std::bind;
 using std::regex;
 using std::string;
-using std::smatch;
 using std::istream;
 using std::find_if;
 using std::function;
@@ -401,15 +400,15 @@ namespace restbed
                 return path;
             }
             
-            smatch matches;
+            std::cmatch matches;
             string sanitised_path = "";
-            static const regex pattern( "^\\{[a-zA-Z0-9_\\-]+: ?(.*)\\}$" );
+            static const regex pattern( "^\\{[a-zA-Z0-9_\\-]+: ?(.*)\\}$", std::regex_constants::optimize );
             
             for ( auto folder : String::split( path, '/' ) )
             {
                 if ( folder.front( ) == '{' and folder.back( ) == '}' )
                 {
-                    if ( not regex_match( folder, matches, pattern ) or matches.size( ) not_eq 2 )
+                    if ( not regex_match( folder.c_str(), matches, pattern ) or matches.size( ) not_eq 2 )
                     {
                         throw runtime_error( String::format( "Resource path parameter declaration is malformed '%s'.", folder.data( ) ) );
                     }
@@ -631,8 +630,8 @@ namespace restbed
         
         void ServiceImpl::extract_path_parameters( const string& sanitised_path, const shared_ptr< const Request >& request ) const
         {
-            smatch matches;
-            static const regex pattern( "^\\{([a-zA-Z0-9_\\-]+): ?.*\\}$" );
+            std::cmatch matches;
+            static const regex pattern( "^\\{([a-zA-Z0-9_\\-]+): ?.*\\}$", std::regex_constants::optimize );
             
             const auto folders = String::split( request->get_path( ), '/' );
             const auto declarations = String::split( m_settings->get_root( ) + "/" + m_resource_paths.at( sanitised_path ), '/' );
@@ -646,7 +645,7 @@ namespace restbed
                 
                 if ( declaration.front( ) == '{' and declaration.back( ) == '}' )
                 {
-                    regex_match( declaration, matches, pattern );
+                    regex_match( declaration.c_str(), matches, pattern );
                     request->m_pimpl->m_path_parameters.insert( make_pair( matches[ 1 ].str( ), folders[ index ] ) );
                 }
             }
@@ -762,12 +761,12 @@ namespace restbed
         
         const map< string, string > ServiceImpl::parse_request_line( istream& stream )
         {
-            smatch matches;
-            static const regex pattern( "^([0-9a-zA-Z]*) ([a-zA-Z0-9:@_~!,;=#%&'\\-\\.\\/\\?\\$\\(\\)\\*\\+]+) (HTTP\\/[0-9]\\.[0-9])\\s*$" );
+            std::cmatch matches;
+            static const regex pattern( "^([0-9a-zA-Z]*) ([a-zA-Z0-9:@_~!,;=#%&'\\-\\.\\/\\?\\$\\(\\)\\*\\+]+) (HTTP\\/[0-9]\\.[0-9])\\s*$", std::regex_constants::optimize );
             string data = "";
             getline( stream, data );
             
-            if ( not regex_match( data, matches, pattern ) or matches.size( ) not_eq 4 )
+            if ( not regex_match( data.c_str(), matches, pattern ) or matches.size( ) not_eq 4 )
             {
                 throw runtime_error( "Your client has issued a malformed or illegal request status line. That’s all we know." );
             }
@@ -786,14 +785,14 @@ namespace restbed
         
         const multimap< string, string > ServiceImpl::parse_request_headers( istream& stream )
         {
-            smatch matches;
+            std::cmatch matches;
             string data = "";
             multimap< string, string > headers;
-            static const regex pattern( "^([^:.]*): *(.*)\\s*$" );
+            static const regex pattern( "^([^:.]*): *(.*)\\s*$", std::regex_constants::optimize );
             
             while ( getline( stream, data ) and data not_eq "\r" )
             {
-                if ( not regex_match( data, matches, pattern ) or matches.size( ) not_eq 3 )
+                if ( not regex_match( data.c_str(), matches, pattern ) or matches.size( ) not_eq 3 )
                 {
                     throw runtime_error( "Your client has issued a malformed or illegal request header. That’s all we know." );
                 }

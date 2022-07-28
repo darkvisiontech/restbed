@@ -93,7 +93,7 @@ namespace restbed
             
             std::shared_ptr< const SSLSettings > get_ssl_settings( void ) const;
             
-            std::multimap< std::string, std::string > get_default_headers( void ) const;
+            const std::multimap< std::string, std::string >& get_default_headers( void ) const;
             
             //Setters
             void set_port( const uint16_t value );

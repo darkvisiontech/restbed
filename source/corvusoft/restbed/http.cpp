@@ -62,6 +62,11 @@ namespace restbed
     
     Bytes Http::to_bytes( const shared_ptr< Response >& value )
     {
+        return Http::to_bytes(*value);
+    }
+
+    Bytes Http::to_bytes( const Response& value )
+    {
         char* locale = nullptr;
         if (auto current_locale = setlocale( LC_NUMERIC, nullptr ) )
         {
@@ -70,33 +75,34 @@ namespace restbed
         }
         
         auto data = String::format( "%s/%.1f %i %s\r\n",
-                                    value->get_protocol( ).data( ),
-                                    value->get_version( ),
-                                    value->get_status_code( ),
-                                    value->get_status_message( ).data( ) );
+                                    value.get_protocol( ).data( ),
+                                    value.get_version( ),
+                                    value.get_status_code( ),
+                                    value.get_status_message( ).data( ) );
         
         if (locale) {
             setlocale( LC_NUMERIC, locale );
             free( locale );
         }
         
-        auto headers = value->get_headers( );
-        
+        auto headers = value.get_headers( );       
         if ( not headers.empty( ) )
         {
             data += String::join( headers, ": ", "\r\n" ) + "\r\n";
         }
         
         data += "\r\n";
-        
-        auto bytes = String::to_bytes( data );
-        auto body = value->get_body( );
-        
+
+        const auto& body = value.get_body();
+        const auto bytes_size = data.length() + body.size();
+
+        Bytes bytes;
+        bytes.resize(bytes_size);
+        memcpy(bytes.data(), data.c_str(), data.length());
         if ( not body.empty( ) )
         {
-            bytes.insert( bytes.end( ), body.begin( ), body.end( ) );
+            memcpy(bytes.data() + data.length(), body.data(), body.size());
         }
-        
         return bytes;
     }
     

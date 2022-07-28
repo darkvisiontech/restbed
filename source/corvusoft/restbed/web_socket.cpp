@@ -90,9 +90,8 @@ namespace restbed
     
     void WebSocket::send( const shared_ptr< WebSocketMessage > message, const function< void ( const shared_ptr< WebSocket > ) > callback )
     {
-        const auto data = m_pimpl->m_manager->compose( message );
-        
-        m_pimpl->m_socket->start_write( data, [ this, callback ]( const error_code & code, size_t )
+        auto data = m_pimpl->m_manager->compose( message );        
+        m_pimpl->m_socket->start_write( std::move(data), [ this, callback ]( const error_code & code, size_t )
         {
             if ( code )
             {

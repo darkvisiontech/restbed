@@ -31,7 +31,6 @@
 using std::map;
 using std::set;
 using std::regex;
-using std::smatch;
 using std::string;
 using std::getline;
 using std::istream;
@@ -155,35 +154,22 @@ namespace restbed
             }
         }
         
-        void SessionImpl::transmit( const Response& response, const function< void ( const error_code&, size_t ) >& callback ) const
+        void SessionImpl::transmit( Response&& response, const function< void ( const error_code&, size_t ) >& callback ) const
         {
-            auto hdrs = m_settings->get_default_headers( );
-            
+            auto hdrs = m_settings->get_default_headers( );            
             if ( m_resource not_eq nullptr )
             {
                 const auto m_resource_headers = m_resource->m_pimpl->m_default_headers;
                 hdrs.insert( m_resource_headers.begin( ), m_resource_headers.end( ) );
             }
             
-            hdrs.insert( m_headers.begin( ), m_headers.end( ) );
-            
+            hdrs.insert( m_headers.begin( ), m_headers.end( ) );           
             auto response_headers = response.get_headers( );
             hdrs.insert( response_headers.begin( ), response_headers.end( ) );
             
-            auto payload = make_shared< Response >( );
-            payload->set_headers( hdrs );
-            payload->set_body( response.get_body( ) );
-            payload->set_version( response.get_version( ) );
-            payload->set_protocol( response.get_protocol( ) );
-            payload->set_status_code( response.get_status_code( ) );
-            payload->set_status_message( response.get_status_message( ) );
-            
-            if ( payload->get_status_message( ).empty( ) )
-            {
-                payload->set_status_message( m_settings->get_status_message( payload->get_status_code( ) ) );
-            }
-            
-            m_request->m_pimpl->m_socket->start_write( Http::to_bytes( payload ), callback );
+            response.set_headers(std::move(hdrs));
+
+            m_request->m_pimpl->m_socket->start_write( Http::to_bytes( response ), callback );
         }
         
         const function< void ( const int, const exception&, const shared_ptr< Session > ) > SessionImpl::get_error_handler( void )

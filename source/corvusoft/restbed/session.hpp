@@ -75,9 +75,9 @@ namespace restbed
             
             bool is_closed( void ) const;
             
-            void close( const Bytes& body, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void close( Bytes&& body, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
-            void close( const Response& response, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void close( Response&& response, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
             void close( const std::string& body = "", const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
@@ -91,11 +91,11 @@ namespace restbed
             
             void close( const int status, const Bytes& body, const std::multimap< std::string, std::string >& headers, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
-            void yield( const Bytes& data, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void yield( Bytes&& data, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
             void yield( const std::string& data, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
-            void yield( const Response& response, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void yield( Response&& response, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
             void yield( const int status, const std::string& body, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             

@@ -28,7 +28,6 @@
 //System Namespaces
 using std::stoi;
 using std::regex;
-using std::smatch;
 using std::strtol;
 using std::string;
 using std::multimap;
@@ -47,10 +46,11 @@ namespace restbed
 {
     Uri::Uri( const string& value, bool relative ) : m_pimpl( new UriImpl )
     {
-        if ( not is_valid( value ) )
-        {
-            throw invalid_argument( "Argument is not a valid URI: " + value );
-        }
+        // STW: remove this is_valid check, super expensive, for a fairly rare case...
+        // if ( not is_valid( value ) )
+        // {
+        //     throw invalid_argument( "Argument is not a valid URI: " + value );
+        // }
         
         m_pimpl->m_uri = value;
         m_pimpl->m_relative = relative;
@@ -83,7 +83,7 @@ namespace restbed
     
     bool Uri::is_valid( const string& value )
     {
-        static const regex pattern( "^[a-zA-Z][a-zA-Z0-9+\\-.]*://(([a-zA-Z0-9\\-._~%!$&'()*+,;=]+)(:([a-zA-Z0-9\\-._~%!$&'()*+,;=]+))?@)?([a-zA-Z0-9\\-._~%!$&'()*+,;=:\\[\\]]*(:[0-9]+)?)?[a-zA-Z0-9\\-._~%!$&'()*+,;=:@/]+(\\?[a-zA-Z0-9\\-._~%!$&'()*+,;=:@/]*)?(#[a-zA-Z0-9\\-._~%!$&'()*+,;=:@/?]*)?$" );
+        static const regex pattern( "^[a-zA-Z][a-zA-Z0-9+\\-.]*://(([a-zA-Z0-9\\-._~%!$&'()*+,;=]+)(:([a-zA-Z0-9\\-._~%!$&'()*+,;=]+))?@)?([a-zA-Z0-9\\-._~%!$&'()*+,;=:\\[\\]]*(:[0-9]+)?)?[a-zA-Z0-9\\-._~%!$&'()*+,;=:@/]+(\\?[a-zA-Z0-9\\-._~%!$&'()*+,;=:@/]*)?(#[a-zA-Z0-9\\-._~%!$&'()*+,;=:@/?]*)?$", std::regex_constants::optimize);
         
         return regex_match( value, pattern );
     }
@@ -226,11 +226,11 @@ namespace restbed
     
     uint16_t Uri::get_port( void ) const
     {
-        smatch match;
+        std::cmatch match;
         string port = String::empty;
-        static const regex pattern( "^[a-zA-Z][a-zA-Z0-9+\\-.]*://(([a-zA-Z0-9\\-._~%!$&'()*+,;=]+)(:([a-zA-Z0-9\\-._~%!$&'()*+,;=]+))?@)?([a-zA-Z0-9\\-._~%]+|\\[[a-zA-Z0-9\\-._~%!$&'()*+,;=:]+\\]):([0-9]+)" );
+        static const regex pattern( "^[a-zA-Z][a-zA-Z0-9+\\-.]*://(([a-zA-Z0-9\\-._~%!$&'()*+,;=]+)(:([a-zA-Z0-9\\-._~%!$&'()*+,;=]+))?@)?([a-zA-Z0-9\\-._~%]+|\\[[a-zA-Z0-9\\-._~%!$&'()*+,;=:]+\\]):([0-9]+)", std::regex_constants::optimize);
         
-        if ( regex_search( m_pimpl->m_uri, match, pattern ) )
+        if ( regex_search( m_pimpl->m_uri.c_str(), match, pattern ) )
         {
             port = match[ 6 ];
         }
@@ -259,11 +259,11 @@ namespace restbed
     
     string Uri::get_path( void ) const
     {
-        static const regex pattern( "^([a-zA-Z][a-zA-Z0-9+\\-.]*://([^/?#]+)?)?([a-zA-Z0-9\\-._~%!$&'()*+,;=:@/]*)" );
+        static const regex pattern( "^([a-zA-Z][a-zA-Z0-9+\\-.]*://([^/?#]+)?)?([a-zA-Z0-9\\-._~%!$&'()*+,;=:@/]*)", std::regex_constants::optimize );
         
-        smatch match;
+        std::cmatch match;
         
-        if ( regex_search( m_pimpl->m_uri, match, pattern ) )
+        if ( regex_search( m_pimpl->m_uri.c_str(), match, pattern ) )
         {
             return ( is_absolute( ) ) ? match[ 3 ] : string( match[ 2 ] ) + string( match[ 3 ] );
         }
@@ -273,10 +273,10 @@ namespace restbed
     
     string Uri::get_query( void ) const
     {
-        smatch match;
-        static const regex pattern( "^[^?#]+\\?([^#]+)" );
+        std::cmatch match;
+        static const regex pattern( "^[^?#]+\\?([^#]+)", std::regex_constants::optimize );
         
-        if ( regex_search( m_pimpl->m_uri, match, pattern ) )
+        if ( regex_search( m_pimpl->m_uri.c_str(), match, pattern ) )
         {
             return match[ 1 ];
         }
@@ -286,10 +286,10 @@ namespace restbed
     
     string Uri::get_scheme( void ) const
     {
-        smatch match;
-        static const regex pattern( "^([a-zA-Z][a-zA-Z0-9+\\-.]*):" );
+        std::cmatch match;
+        static const regex pattern( "^([a-zA-Z][a-zA-Z0-9+\\-.]*):", std::regex_constants::optimize );
         
-        if ( regex_search( m_pimpl->m_uri, match, pattern ) )
+        if ( regex_search( m_pimpl->m_uri.c_str(), match, pattern ) )
         {
             return match[ 1 ];
         }
@@ -299,10 +299,10 @@ namespace restbed
     
     string Uri::get_fragment( void ) const
     {
-        smatch match;
-        static const regex pattern( "#(.+)" );
+        std::cmatch match;
+        static const regex pattern( "#(.+)", std::regex_constants::optimize );
         
-        if ( regex_search( m_pimpl->m_uri, match, pattern ) )
+        if ( regex_search( m_pimpl->m_uri.c_str(), match, pattern ) )
         {
             return match[ 1 ];
         }
@@ -312,10 +312,10 @@ namespace restbed
     
     string Uri::get_username( void ) const
     {
-        smatch match;
-        static const regex pattern( "^[a-zA-Z0-9+\\-.]+://([a-zA-Z0-9\\-._~%!$&'()*+,;=]+)(:([a-zA-Z0-9\\-._~%!$&'()*+,;=]+))?@" );
+        std::cmatch match;
+        static const regex pattern( "^[a-zA-Z0-9+\\-.]+://([a-zA-Z0-9\\-._~%!$&'()*+,;=]+)(:([a-zA-Z0-9\\-._~%!$&'()*+,;=]+))?@", std::regex_constants::optimize );
         
-        if ( regex_search( m_pimpl->m_uri, match, pattern ) )
+        if ( regex_search( m_pimpl->m_uri.c_str(), match, pattern ) )
         {
             return match[ 1 ];
         }
@@ -325,10 +325,10 @@ namespace restbed
     
     string Uri::get_password( void ) const
     {
-        smatch match;
-        static const regex pattern( "^[a-zA-Z0-9+\\-.]+://([a-zA-Z0-9\\-._~%!$&'()*+,;=]+):([a-zA-Z0-9\\-._~%!$&'()*+,;=]+)@" );
+        std::cmatch match;
+        static const regex pattern( "^[a-zA-Z0-9+\\-.]+://([a-zA-Z0-9\\-._~%!$&'()*+,;=]+):([a-zA-Z0-9\\-._~%!$&'()*+,;=]+)@", std::regex_constants::optimize );
         
-        if ( regex_search( m_pimpl->m_uri, match, pattern ) )
+        if ( regex_search( m_pimpl->m_uri.c_str(), match, pattern ) )
         {
             return match[ 2 ];
         }
@@ -341,9 +341,9 @@ namespace restbed
         string authority = String::empty;
         if ( is_relative( ) ) return authority;
         
-        smatch match;
-        static const regex pattern( "^[a-zA-Z][a-zA-Z0-9+\\-.]*://(([a-zA-Z0-9\\-._~%!$&'()*+,;=]+)(:([a-zA-Z0-9\\-._~%!$&'()*+,;=]+))?@)?([a-zA-Z0-9\\-._~%]+|\\[[a-zA-Z0-9\\-._~%!$&'()*+,;=:]+\\])" );
-        if ( regex_search( m_pimpl->m_uri, match, pattern ) ) authority = match[ 5 ];
+        std::cmatch match;
+        static const regex pattern( "^[a-zA-Z][a-zA-Z0-9+\\-.]*://(([a-zA-Z0-9\\-._~%!$&'()*+,;=]+)(:([a-zA-Z0-9\\-._~%!$&'()*+,;=]+))?@)?([a-zA-Z0-9\\-._~%]+|\\[[a-zA-Z0-9\\-._~%!$&'()*+,;=:]+\\])", std::regex_constants::optimize );
+        if ( regex_search( m_pimpl->m_uri.c_str(), match, pattern ) ) authority = match[ 5 ];
         else return authority;
 
         if ( authority.front( ) == '[' ) authority.erase( 0, 1 );

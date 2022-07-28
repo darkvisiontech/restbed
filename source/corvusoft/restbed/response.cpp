@@ -50,7 +50,7 @@ namespace restbed
         return Common::has_parameter( name, m_pimpl->m_headers );
     }
     
-    Bytes Response::get_body( void ) const
+    const Bytes& Response::get_body( void ) const
     {
         return m_pimpl->m_body;
     }
@@ -114,6 +114,11 @@ namespace restbed
         m_pimpl->m_body = value;
     }
     
+    void Response::set_body( Bytes&& value ) 
+    {
+        m_pimpl->m_body = std::move(value);
+    }
+
     void Response::set_body( const string& value )
     {
         m_pimpl->m_body = String::to_bytes( value );
@@ -154,4 +159,10 @@ namespace restbed
     {
         m_pimpl->m_headers = values;
     }
+
+    void Response::set_headers( multimap< string, string >&& values )
+    {
+        m_pimpl->m_headers = std::move(values);
+    }
+
 }

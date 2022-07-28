@@ -61,7 +61,7 @@ namespace restbed
             bool has_header( const std::string& name ) const;
             
             //Getters
-            Bytes get_body( void ) const;
+            const Bytes& get_body( void ) const;
             
             double get_version( void ) const;
             
@@ -87,6 +87,8 @@ namespace restbed
             
             //Setters
             void set_body( const Bytes& value );
+
+            void set_body( Bytes&& value );
             
             void set_body( const std::string& value );
             
@@ -103,6 +105,8 @@ namespace restbed
             void set_header( const std::string& name, const std::string& value );
             
             void set_headers( const std::multimap< std::string, std::string >& values );
+
+            void set_headers( std::multimap< std::string, std::string >&& values );
             
             //Operators
             

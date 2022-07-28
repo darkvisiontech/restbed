@@ -158,9 +158,9 @@ namespace restbed
             m_timer->async_wait( callback );
         }
 
-		void SocketImpl::start_write(const Bytes& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback)
+		void SocketImpl::start_write(Bytes&& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback)
 		{
-			m_strand->post([this, data, callback] { write_helper(data, callback); });
+			m_strand->post([this, dataMove = std::move(data), callback] { write_helper(dataMove, callback); });
         }
 
 		size_t SocketImpl::start_read(const shared_ptr< asio::streambuf >& data, const string& delimiter, error_code& error)
