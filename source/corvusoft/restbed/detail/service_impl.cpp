@@ -782,27 +782,51 @@ namespace restbed
                 { "protocol", protocol.substr( 0, delimiter ) }
             };
         }
-        
+
+        // trim code ripped from stackoverflow https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
+        // trip from start (in place)
+        static inline void ltrim(std::string &s) {
+            s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+                return !std::isspace(ch);
+            }));
+        }
+
+        // trim from end (in place)
+        static inline void rtrim(std::string &s) {
+            s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+                return !std::isspace(ch);
+            }).base(), s.end());
+        }
+
+        // trim from both ends (in place)
+        static std::string trim(std::string &s) {
+            auto ret = s;
+            ltrim(ret);
+            rtrim(ret);
+            return ret;
+        }
+
+
         const multimap< string, string > ServiceImpl::parse_request_headers( istream& stream )
         {
-            std::cmatch matches;
             string data = "";
             multimap< string, string > headers;
-            static const regex pattern( "^([^:.]*): *(.*)\\s*$", std::regex_constants::optimize );
-            
             while ( getline( stream, data ) and data not_eq "\r" )
             {
-                if ( not regex_match( data.c_str(), matches, pattern ) or matches.size( ) not_eq 3 )
-                {
+                const auto colonOffset = data.find(':');
+                if (colonOffset == std::string::npos) {
                     throw runtime_error( "Your client has issued a malformed or illegal request header. That’s all we know." );
                 }
-                
-                headers.insert( make_pair( matches[ 1 ].str( ), matches[ 2 ].str( ) ) );
+                else {
+                    std::string name = data.substr(0, colonOffset);
+                    std::string value = data.substr(colonOffset + 1);
+                    headers.insert( make_pair( trim(name), trim(value) ) );
+                }
             }
             
             return headers;
         }
-        
+
         void ServiceImpl::parse_request( const error_code& error, size_t, const shared_ptr< Session > session ) const
         {
             istream stream( session->m_pimpl->m_request->m_pimpl->m_buffer.get( ) );
