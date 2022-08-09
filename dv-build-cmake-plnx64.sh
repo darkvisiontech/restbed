@@ -16,9 +16,7 @@ source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
 mkdir -p build
 pushd build
 
-$CMAKE_EXECUTABLE -G "Ninja Multi-Config" -DCMAKE_TOOLCHAIN_FILE=../dv-aarch64-plnx64-toolchain.cmake -DCMAKE_CONFIGURATION_TYPES="Debug;MinSizeRel" -DBUILD_TESTS=OFF -DBUILD_SSL=OFF -DBUILD_IPC=OFF ..
-$CMAKE_EXECUTABLE --build . --config Debug --parallel 4 --target clean
-$CMAKE_EXECUTABLE --build . --config Debug --parallel 4 --target install
+$CMAKE_EXECUTABLE -G "Ninja Multi-Config" -DCMAKE_TOOLCHAIN_FILE=../dv-aarch64-plnx64-toolchain.cmake -DCMAKE_CONFIGURATION_TYPES="MinSizeRel" -DBUILD_TESTS=OFF -DBUILD_SSL=OFF -DBUILD_IPC=OFF ..
 $CMAKE_EXECUTABLE --build . --config MinSizeRel --parallel 4 --target clean
 $CMAKE_EXECUTABLE --build . --config MinSizeRel --parallel 4 --target install
 
