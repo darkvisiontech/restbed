@@ -467,6 +467,16 @@ namespace restbed
         m_pimpl->m_error_handler = value;
     }
     
+    void Service::set_performance_handler( const function< void ( const shared_ptr< Session > ) >& value )
+    {
+        if ( is_up( ) )
+        {
+            throw runtime_error( "Runtime modifications of the service are prohibited." );
+        }
+        
+        m_pimpl->m_perf_handler = value;
+    }
+
     void Service::set_authentication_handler( const function< void ( const shared_ptr< Session >, const function< void ( const shared_ptr< Session > ) >& ) >& value )
     {
         if ( is_up( ) )

@@ -111,6 +111,7 @@ namespace restbed
             m_method_not_implemented_handler( nullptr ),
             m_failed_filter_validation_handler( nullptr ),
             m_error_handler( ServiceImpl::default_error_handler ),
+            m_perf_handler( nullptr ),
             m_authentication_handler( nullptr )
         {
             return;
@@ -310,6 +311,7 @@ namespace restbed
                         session->m_pimpl->m_manager = m_session_manager;
                         session->m_pimpl->m_web_socket_manager = m_web_socket_manager;
                         session->m_pimpl->m_error_handler = m_error_handler;
+                        session->m_pimpl->m_perf_handler = m_perf_handler;
                         session->m_pimpl->m_request = make_shared< Request >( );
                         session->m_pimpl->m_request->m_pimpl->m_socket = connection;
                         session->m_pimpl->m_request->m_pimpl->m_socket->m_error_handler = m_error_handler;
@@ -371,6 +373,7 @@ namespace restbed
                     session->m_pimpl->m_manager = m_session_manager;
                     session->m_pimpl->m_web_socket_manager = m_web_socket_manager;
                     session->m_pimpl->m_error_handler = m_error_handler;
+                    session->m_pimpl->m_perf_handler = m_perf_handler;
                     session->m_pimpl->m_request = make_shared< Request >( );
                     session->m_pimpl->m_request->m_pimpl->m_socket = connection;
                     session->m_pimpl->m_request->m_pimpl->m_socket->m_error_handler = m_error_handler;
@@ -606,6 +609,7 @@ namespace restbed
                     session->m_pimpl->m_manager = m_session_manager;
                     session->m_pimpl->m_web_socket_manager = m_web_socket_manager;
                     session->m_pimpl->m_error_handler = m_error_handler;
+                    session->m_pimpl->m_perf_handler = m_perf_handler;
                     session->m_pimpl->m_request = make_shared< Request >( );
                     session->m_pimpl->m_request->m_pimpl->m_socket = connection;
                     session->m_pimpl->m_request->m_pimpl->m_socket->m_error_handler = m_error_handler;

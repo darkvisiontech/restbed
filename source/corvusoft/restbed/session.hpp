@@ -75,21 +75,21 @@ namespace restbed
             
             bool is_closed( void ) const;
             
-            void close( Bytes&& body, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void close( Bytes&& body );
             
-            void close( Response&& response, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void close( Response&& response );
             
-            void close( const std::string& body = "", const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void close( const std::string& body = "" );
             
-            void close( const int status, const Bytes& body, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void close( const int status, const Bytes& body );
             
-            void close( const int status, const std::string& body = "", const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void close( const int status, const std::string& body = "" );
             
-            void close( const int status, const std::multimap< std::string, std::string >& headers, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void close( const int status, const std::multimap< std::string, std::string >& headers );
             
-            void close( const int status, const std::string& body, const std::multimap< std::string, std::string >& headers, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void close( const int status, const std::string& body, const std::multimap< std::string, std::string >& headers );
             
-            void close( const int status, const Bytes& body, const std::multimap< std::string, std::string >& headers, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+            void close( const int status, const Bytes& body, const std::multimap< std::string, std::string >& headers );
             
             void yield( Bytes&& data, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
