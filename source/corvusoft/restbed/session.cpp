@@ -117,9 +117,6 @@ namespace restbed
             m_pimpl->m_manager->save( session, [ this, session ]( const shared_ptr< Session > )
             {
                 m_pimpl->m_request->m_pimpl->m_socket->close( );
-                if (m_pimpl->m_perf_handler) {
-                    m_pimpl->m_perf_handler(session);
-                }
             } );
         } );
     }
@@ -134,7 +131,8 @@ namespace restbed
             return error_handler( 500, runtime_error( "Close failed: session already closed." ), session );
         }
         
-        m_pimpl->transmit( std::move(response), [ this, session ]( const error_code & error, size_t bytes_written )
+        int statusCode = response.get_status_code();
+        m_pimpl->transmit( std::move(response), [ this, session, statusCode ]( const error_code & error, size_t bytes_written )
         {
             if ( error )
             {
@@ -144,11 +142,11 @@ namespace restbed
             }
             
             m_pimpl->m_bytes_sent += bytes_written;
-            m_pimpl->m_manager->save( session, [ this ]( const shared_ptr< Session > session )
+            m_pimpl->m_manager->save( session, [ this, statusCode ]( const shared_ptr< Session > session )
             {
                 m_pimpl->m_request->m_pimpl->m_socket->close( );
                 if (m_pimpl->m_perf_handler) {
-                    m_pimpl->m_perf_handler(session);
+                    m_pimpl->m_perf_handler(session, statusCode);
                 }
             } );
         } );
@@ -230,8 +228,9 @@ namespace restbed
             const auto error_handler = m_pimpl->get_error_handler( );
             return error_handler( 500, runtime_error( "Yield failed: session already closed." ), session );
         }
-        
-        m_pimpl->transmit( std::move(response), [ this, session, callback ]( const error_code & error, size_t bytes_written )
+
+        int statusCode = response.get_status_code();
+        m_pimpl->transmit( std::move(response), [ this, session, callback, statusCode ]( const error_code & error, size_t bytes_written )
         {
             if ( error )
             {
@@ -242,7 +241,7 @@ namespace restbed
 
             m_pimpl->m_bytes_sent += bytes_written;
             if (m_pimpl->m_perf_handler) {
-                m_pimpl->m_perf_handler(session);
+                m_pimpl->m_perf_handler(session, statusCode);
             }
             
             if ( callback == nullptr )

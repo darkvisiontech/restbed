@@ -467,7 +467,7 @@ namespace restbed
         m_pimpl->m_error_handler = value;
     }
     
-    void Service::set_performance_handler( const function< void ( const shared_ptr< Session > ) >& value )
+    void Service::set_performance_handler( const function< void ( const shared_ptr< Session >, int statusCode ) >& value )
     {
         if ( is_up( ) )
         {

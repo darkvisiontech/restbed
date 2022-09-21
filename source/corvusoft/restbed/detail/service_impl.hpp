@@ -188,7 +188,7 @@ namespace restbed
                 
                 std::function< void ( const int, const std::exception&, const std::shared_ptr< Session > ) > m_error_handler;
                 
-                std::function< void ( const std::shared_ptr< Session > ) > m_perf_handler;
+                std::function< void ( const std::shared_ptr< Session >, int statusCode ) > m_perf_handler;
 
                 std::function< void ( const std::shared_ptr< Session >, const std::function< void ( const std::shared_ptr< Session > ) >& ) > m_authentication_handler;
                 
