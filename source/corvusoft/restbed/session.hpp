@@ -92,6 +92,8 @@ namespace restbed
             void close( const int status, const Bytes& body, const std::multimap< std::string, std::string >& headers );
             
             void yield( Bytes&& data, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
+
+            void yield( const std::shared_ptr<const Bytes>& data, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             
             void yield( const std::string& data, const std::function< void ( const std::shared_ptr< Session > ) >& callback = nullptr );
             

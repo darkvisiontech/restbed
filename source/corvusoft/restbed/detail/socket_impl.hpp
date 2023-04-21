@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <functional>
 #include <system_error>
+#include <variant>
 
 //Project Includes
 #include "corvusoft/restbed/byte.hpp"
@@ -71,6 +72,8 @@ namespace restbed
                 virtual void sleep_for( const std::chrono::milliseconds& delay, const std::function< void ( const std::error_code& ) >& callback );
                 
 				virtual void start_write(Bytes&& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback);
+
+				virtual void start_write( const std::shared_ptr<const Bytes>& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback);
 				
 				virtual size_t start_read( const std::shared_ptr< asio::streambuf >& data, const std::string& delimiter, std::error_code& error );
 				
@@ -132,6 +135,8 @@ namespace restbed
                 
 				void write_helper( const Bytes& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback );
 
+				void write_helper( const std::shared_ptr< const Bytes >& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback );
+
                 size_t read( const std::shared_ptr< asio::streambuf >& data, const std::size_t length, std::error_code& error );
                 
                 void read( const std::size_t length, const std::function< void ( const Bytes ) > success, const std::function< void ( const std::error_code ) > failure );
@@ -153,8 +158,27 @@ namespace restbed
                 bool m_is_open;
 
 		        const uint8_t MAX_WRITE_RETRIES = 5;
+
+                struct QueueData {
+
+                    explicit QueueData(const Bytes& data);
+                    explicit QueueData(const std::shared_ptr<const Bytes>& data);
+
+                    const uint8_t* getBufferPtr() const;
+                    size_t getBufferSize() const;
+
+                    void advanceBuffer(size_t dataSize);
+
+                private:
+
+                    const uint8_t* getDataPtr() const;
+
+                    size_t m_dataSize = 0;
+                    std::variant<Bytes, std::shared_ptr<const Bytes> > m_buffer;
+                    size_t m_dataOffset = 0;
+                };
                 
-	            std::queue< std::tuple< Bytes, uint8_t, std::function< void ( const std::error_code&, std::size_t ) > > > m_pending_writes;
+	            std::queue< std::tuple< QueueData, uint8_t, std::function< void ( const std::error_code&, std::size_t ) > > > m_pending_writes;
 
                 std::shared_ptr< Logger > m_logger;
                 

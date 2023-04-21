@@ -186,7 +186,7 @@ namespace restbed
         
         close( std::move(response) );
     }
-    
+
     void Session::yield( Bytes&& body, const function< void ( const shared_ptr< Session > ) >& callback )
     {
         auto session = shared_from_this( );
@@ -212,6 +212,34 @@ namespace restbed
                 callback( session );
             }
         } );
+    }
+
+    void Session::yield( const std::shared_ptr<const Bytes>& body, const function< void(const shared_ptr< Session >) >& callback ) {
+
+        auto session = shared_from_this( );
+        
+        if ( is_closed( ) )
+        {
+            const auto error_handler = m_pimpl->get_error_handler( );
+            return error_handler( 500, runtime_error( "Yield failed: session already closed." ), session );
+        }
+        
+        m_pimpl->m_request->m_pimpl->m_socket->start_write( std::move(body), [ this, session, callback ]( const error_code & error, size_t bytes_written )
+        {
+            if ( error )
+            {
+                const auto message = String::format( "Yield failed: %s", error.message( ).data( ) );
+                const auto error_handler = m_pimpl->get_error_handler( );
+                return error_handler( 500, runtime_error( message ), session );
+            }
+            
+            m_pimpl->m_bytes_sent += bytes_written;
+            if ( callback not_eq nullptr )
+            {
+                callback( session );
+            }
+        } );
+
     }
     
     void Session::yield( const string& body, const function< void ( const shared_ptr< Session > ) >& callback )

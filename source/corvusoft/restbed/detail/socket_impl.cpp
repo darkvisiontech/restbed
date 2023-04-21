@@ -49,6 +49,43 @@ namespace restbed
 {
     namespace detail
     {
+        SocketImpl::QueueData::QueueData(const Bytes& data)
+            : m_dataSize(data.size())
+            , m_buffer(data)
+        {}
+
+        SocketImpl::QueueData::QueueData(const std::shared_ptr<const Bytes>& data) 
+            : m_dataSize(data->size())
+            , m_buffer(data)
+        {}
+ 
+        const uint8_t* SocketImpl::SocketImpl::QueueData::getBufferPtr() const {
+            return getDataPtr() + m_dataOffset;
+        }
+
+        size_t SocketImpl::QueueData::getBufferSize() const {
+            return m_dataSize - m_dataOffset;
+        }
+
+        void SocketImpl::QueueData::advanceBuffer(size_t numBytes) {
+            // assert(m_dataOffset + numBytes < m_dataSize);
+            m_dataOffset += numBytes;
+        }
+
+        const uint8_t* SocketImpl::QueueData::getDataPtr() const {
+
+            const uint8_t* data = nullptr;
+            if (std::holds_alternative<Bytes>(m_buffer)) {
+                const auto& buf = std::get<Bytes>(m_buffer);
+                data = buf.data();
+            }
+            else {
+                const auto& buf = std::get< std::shared_ptr< const Bytes > >(m_buffer);
+                data = buf->data();
+            }
+            return data;
+        }
+
         SocketImpl::SocketImpl( asio::io_context& context, const shared_ptr< tcp::socket >& socket, const shared_ptr< Logger >& logger ) : m_error_handler( nullptr ),
             m_is_open( socket->is_open( ) ),
             m_pending_writes( ),
@@ -161,6 +198,11 @@ namespace restbed
 		void SocketImpl::start_write(Bytes&& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback)
 		{
 			m_strand->post([this, dataMove = std::move(data), callback] { write_helper(dataMove, callback); });
+        }
+
+        void SocketImpl::start_write(const std::shared_ptr< const Bytes >& data, const std::function< void(const std::error_code&, std::size_t) >& callback)
+        {
+            m_strand->post([this, data, callback] { write_helper(data, callback); });
         }
 
 		size_t SocketImpl::start_read(const shared_ptr< asio::streambuf >& data, const string& delimiter, error_code& error)
@@ -355,16 +397,21 @@ namespace restbed
 				if ( m_socket not_eq nullptr )
 				{
 #endif
-					asio::async_write( *m_socket, asio::buffer( get<0>(m_pending_writes.front()).data( ), get<0>(m_pending_writes.front()).size( ) ), m_strand->wrap( [ this ]( const error_code & error, size_t length )
+                    const auto& queued = get<0>(m_pending_writes.front());
+
+                    const uint8_t* data = queued.getBufferPtr();
+                    size_t dataSize = queued.getBufferSize();
+
+					asio::async_write( *m_socket, asio::buffer( data, dataSize ), m_strand->wrap( [ this ]( const error_code & error, size_t length )
 					{
 						m_timer->cancel( );
 						auto callback = get<2>(m_pending_writes.front());
 						auto & retries = get<1>(m_pending_writes.front());
-						auto & buffer = get<0>(m_pending_writes.front());
-						if(length < buffer.size() &&  retries < MAX_WRITE_RETRIES &&  error not_eq asio::error::operation_aborted)
+						auto & queued = get<0>(m_pending_writes.front());
+						if(length < queued.getBufferSize() &&  retries < MAX_WRITE_RETRIES &&  error not_eq asio::error::operation_aborted)
 						{
 							++retries;
-							buffer.erase(buffer.begin(),buffer.begin() + length);
+							queued.advanceBuffer(length);
 						}
 						else
 						{
@@ -469,10 +516,20 @@ namespace restbed
 #endif
         }
 
-		void SocketImpl::write_helper(const Bytes& data, const function< void ( const error_code&, size_t ) >& callback)
+		void SocketImpl::write_helper( const Bytes& data, const function< void ( const error_code&, size_t ) >& callback )
 		{
             const uint8_t retries = 0;
-			m_pending_writes.push(make_tuple(data, retries, callback));
+            m_pending_writes.push(make_tuple(QueueData{ data }, retries, callback));
+			if(m_pending_writes.size() == 1)
+			{
+				write();
+			}
+		}
+
+		void SocketImpl::write_helper(const std::shared_ptr< const Bytes >& data, const function< void ( const error_code&, size_t ) >& callback)
+		{
+            const uint8_t retries = 0;
+            m_pending_writes.push(make_tuple(QueueData{ data }, retries, callback));
 			if(m_pending_writes.size() == 1)
 			{
 				write();
