@@ -68,6 +68,8 @@ namespace restbed
             WebSocketMessage( const OpCode code, const std::string& data );
             
             WebSocketMessage( const OpCode code, const Bytes& data, const std::uint32_t mask );
+
+            WebSocketMessage( const OpCode code, Bytes&& data, const std::uint32_t mask );
             
             WebSocketMessage( const OpCode code, const std::string& data, const std::uint32_t mask );
             

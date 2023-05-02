@@ -160,7 +160,7 @@ namespace restbed
 
 		void SocketImpl::start_write(Bytes&& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback)
 		{
-			m_strand->post([this, dataMove = std::move(data), callback] { write_helper(dataMove, callback); });
+			m_strand->post([this, dataMove = std::move(data), callback]() mutable { write_helper(std::move(dataMove), callback); });
         }
 
 		size_t SocketImpl::start_read(const shared_ptr< asio::streambuf >& data, const string& delimiter, error_code& error)
@@ -469,10 +469,10 @@ namespace restbed
 #endif
         }
 
-		void SocketImpl::write_helper(const Bytes& data, const function< void ( const error_code&, size_t ) >& callback)
+		void SocketImpl::write_helper(Bytes&& data, const function< void ( const error_code&, size_t ) >& callback)
 		{
             const uint8_t retries = 0;
-			m_pending_writes.push(make_tuple(data, retries, callback));
+			m_pending_writes.push(make_tuple(std::move(data), retries, callback));
 			if(m_pending_writes.size() == 1)
 			{
 				write();

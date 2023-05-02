@@ -130,7 +130,7 @@ namespace restbed
                 
                 void write( const Bytes& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback );
                 
-				void write_helper( const Bytes& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback );
+				void write_helper( Bytes&& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback );
 
                 size_t read( const std::shared_ptr< asio::streambuf >& data, const std::size_t length, std::error_code& error );
                 
