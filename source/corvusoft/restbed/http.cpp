@@ -105,6 +105,47 @@ namespace restbed
         }
         return bytes;
     }
+
+    Bytes Http::build_response_header( const std::shared_ptr< Response >& value )
+    {
+        return build_response_header(*value);
+    }
+
+    Bytes Http::build_response_header( const Response& value )
+    {
+        char* locale = nullptr;
+        if (auto current_locale = setlocale( LC_NUMERIC, nullptr ) )
+        {
+            locale = strdup(current_locale);
+            setlocale( LC_NUMERIC, "C" );
+        }
+        
+        auto data = String::format( "%s/%.1f %i %s\r\n",
+                                    value.get_protocol( ).data( ),
+                                    value.get_version( ),
+                                    value.get_status_code( ),
+                                    value.get_status_message( ).data( ) );
+        
+        if (locale) {
+            setlocale( LC_NUMERIC, locale );
+            free( locale );
+        }
+        
+        auto headers = value.get_headers( );       
+        if ( not headers.empty( ) )
+        {
+            data += String::join( headers, ": ", "\r\n" ) + "\r\n";
+        }
+        
+        data += "\r\n";
+        const auto bytes_size = data.length();
+
+        Bytes bytes;
+        bytes.resize(bytes_size);
+        memcpy(bytes.data(), data.c_str(), data.length());
+
+        return bytes;
+    }
     
     void Http::close( const shared_ptr< Request >& value )
     {

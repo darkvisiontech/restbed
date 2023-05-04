@@ -44,6 +44,7 @@ namespace restbed
     namespace detail
     {
         //Forward Declarations
+        using ConstBufferSequence = std::pair<Bytes, Bytes>; // scatter-gather I/O - { header, payload }
         
         class SocketImpl : public std::enable_shared_from_this<SocketImpl>
         {
@@ -71,6 +72,8 @@ namespace restbed
                 virtual void sleep_for( const std::chrono::milliseconds& delay, const std::function< void ( const std::error_code& ) >& callback );
                 
 				virtual void start_write(Bytes&& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback);
+
+				virtual void start_write(ConstBufferSequence&& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback);
 				
 				virtual size_t start_read( const std::shared_ptr< asio::streambuf >& data, const std::string& delimiter, std::error_code& error );
 				
@@ -132,6 +135,8 @@ namespace restbed
                 
 				void write_helper( Bytes&& data, const std::function< void ( const std::error_code&, std::size_t ) >& callback );
 
+                void write_helper(ConstBufferSequence&& data, const std::function< void(const std::error_code&, std::size_t) >& callback );
+
                 size_t read( const std::shared_ptr< asio::streambuf >& data, const std::size_t length, std::error_code& error );
                 
                 void read( const std::size_t length, const std::function< void ( const Bytes ) > success, const std::function< void ( const std::error_code ) > failure );
@@ -152,9 +157,7 @@ namespace restbed
                 //Properties
                 bool m_is_open;
 
-		        const uint8_t MAX_WRITE_RETRIES = 5;
-                
-	            std::queue< std::tuple< Bytes, uint8_t, std::function< void ( const std::error_code&, std::size_t ) > > > m_pending_writes;
+	            std::queue< std::tuple< ConstBufferSequence, std::function< void ( const std::error_code&, std::size_t ) > > > m_pending_writes;
 
                 std::shared_ptr< Logger > m_logger;
                 

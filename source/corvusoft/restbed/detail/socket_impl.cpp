@@ -163,6 +163,10 @@ namespace restbed
 			m_strand->post([this, dataMove = std::move(data), callback]() mutable { write_helper(std::move(dataMove), callback); });
         }
 
+        void SocketImpl::start_write(ConstBufferSequence&& data, const std::function< void(const std::error_code&, std::size_t) >& callback) {
+			m_strand->post([this, dataMove = std::move(data), callback]() mutable { write_helper(std::move(dataMove), callback); });
+        }
+
 		size_t SocketImpl::start_read(const shared_ptr< asio::streambuf >& data, const string& delimiter, error_code& error)
 		{
 			return read( data, delimiter,error );
@@ -355,21 +359,21 @@ namespace restbed
 				if ( m_socket not_eq nullptr )
 				{
 #endif
-					asio::async_write( *m_socket, asio::buffer( get<0>(m_pending_writes.front()).data( ), get<0>(m_pending_writes.front()).size( ) ), m_strand->wrap( [ this ]( const error_code & error, size_t length )
+					auto & raw_buffers = get<0>(m_pending_writes.front());
+					auto & header = raw_buffers.first;
+					auto & payload = raw_buffers.second;
+
+					std::array<asio::const_buffer, 2> send_buffers{
+						header.size() ? asio::const_buffer(header.data(), header.size()) : asio::const_buffer(),
+						payload.size() ? asio::const_buffer(payload.data(), payload.size()) : asio::const_buffer()
+					};
+
+					asio::async_write( *m_socket, send_buffers, m_strand->wrap( [ this ]( const error_code & error, size_t length )
 					{
 						m_timer->cancel( );
-						auto callback = get<2>(m_pending_writes.front());
-						auto & retries = get<1>(m_pending_writes.front());
-						auto & buffer = get<0>(m_pending_writes.front());
-						if(length < buffer.size() &&  retries < MAX_WRITE_RETRIES &&  error not_eq asio::error::operation_aborted)
-						{
-							++retries;
-							buffer.erase(buffer.begin(),buffer.begin() + length);
-						}
-						else
-						{
-							m_pending_writes.pop();
-						}
+						auto callback = get<1>(m_pending_writes.front());
+
+						m_pending_writes.pop();
 						if ( error not_eq asio::error::operation_aborted )
 						{
 							callback( error, length );
@@ -384,21 +388,20 @@ namespace restbed
 				}
 				else
 				{
-					asio::async_write(*m_ssl_socket, asio::buffer( get<0>(m_pending_writes.front()).data( ), get<0>(m_pending_writes.front()).size( ) ), m_strand->wrap( [ this ]( const error_code & error, size_t length )
+					const auto & raw_buffers = get<0>(m_pending_writes.front());
+					std::array<asio::const_buffer, 2> send_buffers{
+						raw_buffers[0].size() ? asio::const_buffer(raw_buffers[0].data(), raw_buffers[0].size()) : asio::const_buffer(),
+						raw_buffers[1].size() ? asio::const_buffer(raw_buffers[1].data(), raw_buffers[1].size()) : asio::const_buffer()
+					};
+
+					std::array<asio::const_buffer, 2> send_buffers{ asio::const_buffer(raw_buffers[0].data(), raw_buffers[0].size()), asio::const_buffer(raw_buffers[1].data(), raw_buffers[1].size()) };
+
+					asio::async_write(*m_ssl_socket, send_buffers, m_strand->wrap( [ this ]( const error_code & error, size_t length )
 					{
 						m_timer->cancel( );
-						auto callback = get<2>(m_pending_writes.front());
-						auto & retries = get<1>(m_pending_writes.front());
-						auto & buffer = get<0>(m_pending_writes.front());
-						if(length < buffer.size() &&  retries < MAX_WRITE_RETRIES &&  error not_eq asio::error::operation_aborted)
-						{
-							++retries;
-							buffer.erase(buffer.begin(),buffer.begin() + length);
-						}
-						else
-						{
-							m_pending_writes.pop();
-						}
+						auto callback = get<1>(m_pending_writes.front());
+
+						m_pending_writes.pop();
 						if ( error not_eq asio::error::operation_aborted )
 						{
 							callback( error, length );
@@ -471,13 +474,17 @@ namespace restbed
 
 		void SocketImpl::write_helper(Bytes&& data, const function< void ( const error_code&, size_t ) >& callback)
 		{
-            const uint8_t retries = 0;
-			m_pending_writes.push(make_tuple(std::move(data), retries, callback));
+			write_helper({ std::move(data), Bytes() }, callback);
+		}
+
+        void SocketImpl::write_helper(ConstBufferSequence&& data, const std::function< void(const std::error_code&, std::size_t) >& callback)
+        {
+			m_pending_writes.push(make_tuple(std::move(data), callback));
 			if(m_pending_writes.size() == 1)
 			{
 				write();
 			}
-		}
+        }
         
         size_t SocketImpl::read( const shared_ptr< asio::streambuf >& data, const size_t length, error_code& error )
         {
