@@ -41,20 +41,24 @@ namespace restbed
     {
         return;
     }
-    
+
     WebSocketMessage::WebSocketMessage( const WebSocketMessage::OpCode code, const string& data ) : WebSocketMessage( code, data, 0 )
     {
         return;
     }
     
-    WebSocketMessage::WebSocketMessage( const WebSocketMessage::OpCode code, const Bytes& data, const uint32_t mask ) : m_pimpl( new WebSocketMessageImpl )
+    WebSocketMessage::WebSocketMessage( const WebSocketMessage::OpCode code, const Bytes& data, const uint32_t mask ) : WebSocketMessage(code, Bytes(data), mask)
     {
-        m_pimpl->m_data = data;
+    }
+
+    WebSocketMessage::WebSocketMessage( const WebSocketMessage::OpCode code, Bytes&& data, const uint32_t mask ) : m_pimpl( new WebSocketMessageImpl )
+    {
+        m_pimpl->m_data = std::move(data);
         m_pimpl->m_mask = mask;
         m_pimpl->m_opcode = code;
         m_pimpl->m_mask_flag = ( mask == 0 ) ? false : true;
         
-        const auto length = data.size( );
+        const auto length = m_pimpl->m_data.size( );
         
         if ( length <= 125 )
         {

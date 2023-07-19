@@ -54,6 +54,11 @@ namespace restbed
     {
         return m_pimpl->m_body;
     }
+
+    void Response::move_body_to_buffer( Bytes& dest )
+    {
+        dest = std::move(m_pimpl->m_body);
+    }
     
     double Response::get_version( void ) const
     {

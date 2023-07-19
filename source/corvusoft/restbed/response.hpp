@@ -73,6 +73,8 @@ namespace restbed
             
             void get_body( std::string& body, const std::function< std::string ( const Bytes& ) >& transform = nullptr ) const;
             
+            void move_body_to_buffer( Bytes& dest );
+
             template< typename Type, typename std::enable_if< std::is_arithmetic< Type >::value, Type >::type = 0 >
             Type get_header( const std::string& name, const Type default_value ) const
             {

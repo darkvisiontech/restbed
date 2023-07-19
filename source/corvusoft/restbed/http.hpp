@@ -56,6 +56,10 @@ namespace restbed
             
             static Bytes to_bytes( const Response& value );
 
+            static Bytes build_response_header( const std::shared_ptr< Response >& value );
+
+            static Bytes build_response_header( const Response& value );
+
             static void close( const std::shared_ptr< Request >& value );
             
             static bool is_open( const std::shared_ptr< Request >& value );

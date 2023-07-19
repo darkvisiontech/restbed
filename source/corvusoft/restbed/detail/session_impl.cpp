@@ -170,7 +170,12 @@ namespace restbed
             
             response.set_headers(std::move(hdrs));
 
-            m_request->m_pimpl->m_socket->start_write( Http::to_bytes( response ), callback );
+            Bytes payload; 
+            response.move_body_to_buffer(payload);
+
+            auto header = Http::build_response_header(response);
+
+            m_request->m_pimpl->m_socket->start_write( {std::move(header), std::move(payload)}, callback );
         }
         
         const function< void ( const int, const exception&, const shared_ptr< Session > ) > SessionImpl::get_error_handler( void )

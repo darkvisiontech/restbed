@@ -86,7 +86,7 @@ namespace restbed
                 
                 std::function< void (  const std::error_code& error, std::size_t length, const std::shared_ptr< Session > ) > m_keep_alive_callback;
 
-                std::function< void ( const std::shared_ptr< Session >) > m_perf_handler;
+                std::function< void ( const std::shared_ptr< Session >, int statusCode) > m_perf_handler;
 
                 std::chrono::steady_clock::time_point m_start_time;
 
