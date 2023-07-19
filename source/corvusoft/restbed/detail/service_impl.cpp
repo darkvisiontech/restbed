@@ -434,16 +434,15 @@ namespace restbed
         
         void ServiceImpl::not_found( const shared_ptr< Session > session ) const
         {
-            log( Logger::INFO, String::format( "'%s' resource route not found '%s'.",
-                                               session->get_origin( ).data( ),
-                                               session->get_request( )->get_path( ).data( ) ) );
-                                               
             if ( m_not_found_handler not_eq nullptr )
             {
                 m_not_found_handler( session );
             }
             else
             {
+                log( Logger::INFO, String::format( "'%s' resource route not found '%s'.",
+                                                session->get_origin( ).data( ),
+                                                session->get_request( )->get_path( ).data( ) ) );
                 session->close( NOT_FOUND );
             }
         }
