@@ -1,0 +1,25 @@
+cmake_minimum_required(VERSION 3.18)
+if (DEFINED ENV{IMX95_GCC} AND DEFINED ENV{IMX95_SYSROOT}) 
+
+    cmake_path(CONVERT $ENV{IMX95_GCC} TO_CMAKE_PATH_LIST IMX95_GCC_PATH)
+    cmake_path(CONVERT $ENV{IMX95_SYSROOT} TO_CMAKE_PATH_LIST IMX95_SYSROOT_PATH)
+
+    set(IMX95_COMPILER_EXT "")
+    if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
+        set(IMX95_COMPILER_EXT ".exe")
+    endif()
+
+    set(CMAKE_SYSTEM_NAME Linux)
+    set(CMAKE_SYSTEM_PROCESSOR arm)
+    set(CMAKE_SYSROOT "${IMX95_SYSROOT_PATH}")
+    set(CMAKE_C_COMPILER "${IMX95_GCC_PATH}/aarch64-poky-linux-gcc${IMX95_COMPILER_EXT}")
+    set(CMAKE_CXX_COMPILER "${IMX95_GCC_PATH}/aarch64-poky-linux-g++${IMX95_COMPILER_EXT}")
+    set(CMAKE_CXX_LINKER "${IMX95_GCC_PATH}/aarch64-poky-linux-ld${IMX95_COMPILER_EXT}")
+    set(CMAKE_CXX_AR "${IMX95_GCC_PATH}/aarch64-poky-linux-ar${IMX95_COMPILER_EXT}")
+    set(CMAKE_AR "${IMX95_GCC_PATH}/aarch64-poky-linux-ar${IMX95_COMPILER_EXT}")
+    set(CMAKE_RANLIB "${IMX95_GCC_PATH}/aarch64-poky-linux-ranlib${IMX95_COMPILER_EXT}")
+    set(CMAKE_STRIP "${IMX95_GCC_PATH}/aarch64-poky-linux-strip${IMX95_COMPILER_EXT}")
+    
+else()
+    message(FATAL_ERROR "IMX95_GCC and IMX95_SYSROOT environment variable not defined...")
+endif() 
