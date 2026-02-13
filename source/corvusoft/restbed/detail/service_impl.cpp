@@ -112,7 +112,8 @@ namespace restbed
             m_failed_filter_validation_handler( nullptr ),
             m_error_handler( ServiceImpl::default_error_handler ),
             m_perf_handler( nullptr ),
-            m_authentication_handler( nullptr )
+            m_authentication_handler( nullptr ),
+            m_connection_count( 0 )
         {
             return;
         }
@@ -304,7 +305,10 @@ namespace restbed
                             m_settings->get_keep_alive_interval(),
                             m_settings->get_keep_alive_cnt());
                     }
-                    
+
+                    m_connection_count++;
+                    connection->set_close_callback( [ this ] { m_connection_count--; });
+
                     m_session_manager->create( [ this, connection ]( const shared_ptr< Session > session )
                     {
                         session->m_pimpl->m_settings = m_settings;
@@ -366,7 +370,11 @@ namespace restbed
                         m_settings->get_keep_alive_interval(),
                         m_settings->get_keep_alive_cnt());
                 }
-                
+
+                m_connection_count++;
+                connection->set_close_callback( [ this ] { m_connection_count--; });
+
+
                 m_session_manager->create( [ this, connection ]( const shared_ptr< Session > session )
                 {
                     session->m_pimpl->m_settings = m_settings;
@@ -601,7 +609,10 @@ namespace restbed
                         m_settings->get_keep_alive_interval(),
                         m_settings->get_keep_alive_cnt());
                 }
-                
+
+                m_connection_count++;
+                connection->set_close_callback( [ this ] { m_connection_count--; });
+
                 m_session_manager->create( [ this, connection ]( const shared_ptr< Session > session )
                 {
                     session->m_pimpl->m_settings = m_settings;
@@ -970,6 +981,11 @@ namespace restbed
         const function< void ( const int, const exception&, const shared_ptr< Session > ) > ServiceImpl::get_error_handler( const shared_ptr< Session >& session ) const
         {
             return ( session->m_pimpl->m_resource not_eq nullptr and session->m_pimpl->m_resource->m_pimpl->m_error_handler not_eq nullptr ) ? session->m_pimpl->m_resource->m_pimpl->m_error_handler : m_error_handler;
+        }
+
+        unsigned int ServiceImpl::get_connection_count( void ) const
+        {
+            return m_connection_count.load( );
         }
     }
 }

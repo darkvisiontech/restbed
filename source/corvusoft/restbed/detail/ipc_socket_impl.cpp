@@ -48,6 +48,7 @@ namespace restbed
     {
         IPCSocketImpl::IPCSocketImpl( asio::io_context& context, const shared_ptr< stream_protocol::socket >& socket, const std::string& path, const shared_ptr< Logger >& logger ) : SocketImpl( context ),
             m_error_handler( nullptr ),
+            m_close_callback( nullptr ),
             m_is_open( socket->is_open( ) ),
             m_path( path ),
             m_pending_writes( ),
@@ -60,20 +61,38 @@ namespace restbed
         {
             return;
         }
-        
+
+        IPCSocketImpl::~IPCSocketImpl( void )
+        {
+            mark_closed( );
+        }
+
+        void IPCSocketImpl::mark_closed( void )
+        {
+            if ( m_is_open )
+            {
+                m_is_open = false;
+
+                if ( m_close_callback not_eq nullptr )
+                {
+                    m_close_callback( );
+                }
+            }
+        }
+
         void IPCSocketImpl::close( void )
         {
-            m_is_open = false;
-            
             if ( m_timer not_eq nullptr )
             {
                 m_timer->cancel( );
             }
-            
+
             if ( m_socket not_eq nullptr )
             {
                 m_socket->close( );
             }
+
+            mark_closed( );
         }
         
         bool IPCSocketImpl::is_open( void ) const
@@ -155,6 +174,11 @@ namespace restbed
             m_timeout = value;
         }
 
+        void IPCSocketImpl::set_close_callback( const function< void ( void ) >& callback )
+        {
+            m_close_callback = callback;
+        }
+
         void IPCSocketImpl::set_keep_alive( const uint32_t, const uint32_t, const uint32_t)
         {
             return;
@@ -234,10 +258,10 @@ namespace restbed
             asio::async_write( *m_socket, asio::buffer( buffer->data( ), buffer->size( ) ), m_strand->wrap( [ this, callback, buffer ]( const error_code & error, size_t length )
             {
                 m_timer->cancel( );
-                
+
                 if ( error )
                 {
-                    m_is_open = false;
+                    mark_closed( );
                 }
                 
                 if ( error not_eq asio::error::operation_aborted )
@@ -283,26 +307,26 @@ namespace restbed
 
             if ( error )
             {
-                m_is_open = false;
+                mark_closed( );
             }
 
             return size;
         }
-        
+
         void IPCSocketImpl::read( const std::size_t length, const function< void ( const Bytes ) > success, const function< void ( const error_code ) > failure )
         {
             m_timer->cancel( );
             m_timer->expires_from_now( m_timeout );
             m_timer->async_wait( m_strand->wrap( bind( &IPCSocketImpl::connection_timeout_handler, this, shared_from_this( ), _1 ) ) );
-            
+
             auto data = make_shared< asio::streambuf >( );
             asio::async_read( *m_socket, *data, asio::transfer_exactly( length ), [ this, data, success, failure ]( const error_code code, const size_t length )
             {
                 m_timer->cancel( );
-                
+
                 if ( code )
                 {
-                    m_is_open = false;
+                    mark_closed( );
                     failure( code );
                 }
                 else
@@ -322,19 +346,19 @@ namespace restbed
             asio::async_read( *m_socket, *data, asio::transfer_at_least( length ), m_strand->wrap( [ this, callback ]( const error_code & error, size_t length )
             {
                 m_timer->cancel( );
-                
+
                 if ( error )
                 {
-                    m_is_open = false;
+                    mark_closed( );
                 }
-                
+
                 if ( error not_eq asio::error::operation_aborted )
                 {
                     callback( error, length );
                 }
             } ) );
         }
-        
+
         size_t IPCSocketImpl::read( const shared_ptr< asio::streambuf >& data, const string& delimiter, error_code& error )
         {
             m_timer->cancel( );
@@ -361,25 +385,25 @@ namespace restbed
 
             if ( error )
             {
-                m_is_open = false;
+                mark_closed( );
             }
 
             return length;
         }
-        
+
         void IPCSocketImpl::read( const shared_ptr< asio::streambuf >& data, const string& delimiter, const function< void ( const error_code&, size_t ) >& callback )
         {
             m_timer->cancel( );
             m_timer->expires_from_now( m_timeout );
             m_timer->async_wait( m_strand->wrap( bind( &IPCSocketImpl::connection_timeout_handler, this, shared_from_this( ), _1 ) ) );
-            
+
             asio::async_read_until( *m_socket, *data, delimiter, m_strand->wrap( [ this, callback ]( const error_code & error, size_t length )
             {
                 m_timer->cancel( );
-                
+
                 if ( error )
                 {
-                    m_is_open = false;
+                    mark_closed( );
                 }
                 
                 if ( error not_eq asio::error::operation_aborted )

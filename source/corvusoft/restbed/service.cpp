@@ -365,7 +365,22 @@ namespace restbed
     {
         return m_pimpl->get_https_uri( );
     }
-    
+
+    unsigned int Service::get_connection_count( void ) const
+    {
+        return m_pimpl->get_connection_count( );
+    }
+
+    unsigned int Service::get_worker_count( void ) const
+    {
+        if ( m_pimpl->m_settings == nullptr )
+        {
+            return 0;
+        }
+
+        return m_pimpl->m_settings->get_worker_limit( );
+    }
+
     void Service::set_logger( const shared_ptr< Logger >& value )
     {
         if ( is_up( ) )

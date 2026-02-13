@@ -7,6 +7,7 @@
 //System Includes
 #include <set>
 #include <map>
+#include <atomic>
 #include <chrono>
 #include <future>
 #include <memory>
@@ -128,11 +129,13 @@ namespace restbed
                 
                 //Getters
                 const std::shared_ptr< const Uri > get_http_uri( void ) const;
-                
+
                 const std::shared_ptr< const Uri > get_https_uri( void ) const;
-                
+
                 const std::function< void ( const int, const std::exception&, const std::shared_ptr< Session > ) > get_error_handler( const std::shared_ptr< Session >& session ) const;
-                
+
+                unsigned int get_connection_count( void ) const;
+
                 //Setters
                 
                 //Operators
@@ -191,7 +194,9 @@ namespace restbed
                 std::function< void ( const std::shared_ptr< Session >, int statusCode ) > m_perf_handler;
 
                 std::function< void ( const std::shared_ptr< Session >, const std::function< void ( const std::shared_ptr< Session > ) >& ) > m_authentication_handler;
-                
+
+                mutable std::atomic< unsigned int > m_connection_count;
+
             protected:
                 //Friends
                 

@@ -54,12 +54,14 @@ namespace restbed
                 //Constructors
                 IPCSocketImpl( asio::io_context& context, const std::shared_ptr< asio::local::stream_protocol::socket >& socket, const std::string& path, const std::shared_ptr< Logger >& logger = nullptr );
 
-                ~IPCSocketImpl( void ) = default;
+                ~IPCSocketImpl( void );
                 
                 //Functionality
                 void close( void ) override;
-                
+
                 bool is_open( void ) const override;
+
+                void mark_closed( void );
                 
                 bool is_closed( void ) const override;
                 
@@ -88,11 +90,15 @@ namespace restbed
                 void set_timeout( const std::chrono::milliseconds& value ) override;
 
                 void set_keep_alive( const uint32_t start, const uint32_t interval, const uint32_t cnt) override;
-                
+
+                void set_close_callback( const std::function< void ( void ) >& callback ) override;
+
                 //Operators
-                
+
                 //Properties
                 std::function< void ( const int, const std::exception&, const std::shared_ptr< Session > ) > m_error_handler;
+
+                std::function< void ( void ) > m_close_callback;
                 
             protected:
                 //Friends

@@ -84,11 +84,15 @@ namespace restbed
             
             //Getters
             const std::chrono::seconds get_uptime( void ) const;
-            
+
             const std::shared_ptr< const Uri > get_http_uri( void ) const;
-            
+
             const std::shared_ptr< const Uri > get_https_uri( void ) const;
-            
+
+            unsigned int get_connection_count( void ) const;
+
+            unsigned int get_worker_count( void ) const;
+
             //Setters
             void set_logger( const std::shared_ptr< Logger >& value );
             
