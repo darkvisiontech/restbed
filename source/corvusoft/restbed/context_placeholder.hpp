@@ -33,8 +33,11 @@ namespace restbed
 {
     //Forward Declarations
     
+    // DV: export macro removed. This template lives entirely in this header,
+    // so each consumer must compile its own copy. dllimport forbids exactly
+    // that, making Session::set fail to link (LNK2019) for any new Type.
     template< typename Type  >
-    class CONTEXT_PLACEHOLDER_EXPORT ContextPlaceholder : public ContextPlaceholderBase
+    class ContextPlaceholder : public ContextPlaceholderBase
     {
         public:
             //Friends
